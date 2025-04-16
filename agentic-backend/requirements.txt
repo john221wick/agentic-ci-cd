@@ -1,2 +1,8 @@
 markdown
 xhtml2pdf
+langgraph
+langchain
+langchain-core
+pydantic
+langchain_ollama
+langchain_groq

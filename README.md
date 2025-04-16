@@ -26,7 +26,7 @@ The frontend is svelte basic ui template with env, prettier, eslint etc
 3. The FastAPI backend receives the files and uses LangGraph to construct a graph of nodes.
 4. These nodes process the files and perform CI/CD tasks, such as generating reports or running automated checks.
 
----
+----
 
 ## Backend Details
 

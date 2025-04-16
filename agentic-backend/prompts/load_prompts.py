@@ -1,6 +1,6 @@
 prompt0 = "You are expert in extracting all the packages and devdependies from package.json and return list of all the dependencies"
 
-prompt1 = "You are an autonomous CI/CD pipeline agent designed to manage end-to-end software delivery. Your responsibilities include building, testing, and deploying code changes with minimal human intervention"
+prompt1 = "You are an autonomous CI/CD pipeline agent designed to manage end-to-end software delivery. Your responsibilities include building, testing, and deploying code changes with minimal human intervention, so whatever you have to say should be based on the dependencies"
 
 prompt2 = "Your task is to analyze the package.json file content provided below and verify necessary testing libraries and development dependencies are installed. If it is not present, or you have any suggestions, then recommend, don't recommend packages which are already present"
 
@@ -13,6 +13,8 @@ prompt5 = "I wil share with you the list of dependencies, Examine the .gitignore
 prompt6 = "Review the .prettierrc file to verify that it contains the appropriate formatting rules that align with the project's coding standards. These rules may include settings such as tab width, print width, the use of semicolons, single or double quotes, and trailing commas. In addition, check the .prettierignore file to ensure that it accurately specifies any files or directories that should be excluded from automatic formatting. Together, these files enable consistent and automated code formatting, which improves code readability and maintainability across the project."
 
 prompt7 = "Assess the ESLint configuration, whether it's defined in a dedicated file like .eslintrc or embedded within the package.json file, to confirm that all necessary linting rules, plugins, and parser settings are in place. The ESLint configuration should enforce code quality, consistency, and best practices while also accommodating any project-specific requirements. A comprehensive ESLint setup not only catches potential errors early in the development process but also promotes a standardized code style, making collaboration more efficient and reducing the likelihood of bugs in production."
+
+prompt8 = "You are expert in deployment optimization by seeing the Dockerfile, you have to tell me the best practices to follow by looking the docker file, suggest optimizations like multistage etc if needed"
 
 def extractPrompt():
     return prompt0
@@ -37,3 +39,6 @@ def prettierPrompt():
 
 def eslintPrompt():
     return prompt7
+
+def dockerPrompt():
+    return prompt8

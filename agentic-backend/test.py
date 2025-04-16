@@ -18,10 +18,9 @@ from langgraph.prebuilt import ToolNode, tools_condition
 import operator
 from langgraph.graph import StateGraph, START, END
 from pprint import pprint
-from generate_html import generate_html_content
 #llm = ChatOllama(model="llama3.2:latest")
 
-from prompts.load_prompts import mainPrompt, jsonPrompt, gitignorePrompt, envPrompt, eslintPrompt, vitestPrompt, prettierPrompt, extractPrompt
+from prompts.load_prompts import mainPrompt, jsonPrompt, gitignorePrompt, envPrompt, eslintPrompt, vitestPrompt, prettierPrompt, extractPrompt, dockerPrompt
 extractPrompt = extractPrompt()
 mainPrompt = mainPrompt()
 jsonPrompt = jsonPrompt()
@@ -30,21 +29,24 @@ envPrompt = envPrompt()
 prettierPrompt = prettierPrompt()
 eslintPrompt = eslintPrompt()
 vitestPrompt = vitestPrompt()
+dockerPrompt = dockerPrompt()
 print(mainPrompt)
 
 # Prompts for loading the files, will be automated lateron
-with open("test-files/package.json", "r") as file:
+with open("files/package.json", "r") as file:
     packageFile = file.read()
-with open("test-files/.gitignore", "r") as file:
+with open("files/.gitignore", "r") as file:
     gitIgnoreFile = file.read()
-with open("test-files/.env", "r") as file:
+with open("files/.env", "r") as file:
     envFile = file.read()
-with open("test-files/.prettierignore", "r") as file:
+with open("files/.prettierignore", "r") as file:
     prettierIgnoreFile = file.read()
-with open("test-files/.prettierrc", "r") as file:
+with open("files/.prettierrc", "r") as file:
     prettierrcFile = file.read()
-with open("test-files/eslint.config.js", "r") as file:
+with open("files/eslint.config.js", "r") as file:
     eslintFile = file.read()
+with open("files/Dockerfile", "r") as file:
+    dockerFile = file.read()
 
 
 print(packageFile)
@@ -68,6 +70,7 @@ class mainState(BaseModel):
     prettierSuggestions : str
     vitestSuggestions : str
     eslintSuggestions : str
+    dockerSuggestions: str
 
 # Defining schemans for getting structured output from llm
 class installSchema(BaseModel):
@@ -130,6 +133,19 @@ def envNode(state: mainState):
     response = chain.invoke({"depState": state.dependencies, 'file': file})
     return {"envSuggestions": response.content}
 
+def dockerNode(state: mainState):
+    file =  dockerFile
+    prompt = ChatPromptTemplate([
+        ("system", mainPrompt),
+        ("user", "this is the list of dependencies {depState}"),
+        ("system", dockerPrompt),
+        ("user", "this is the env file {file}")
+    ])
+    chain = prompt | llm
+
+    response = chain.invoke({"depState": state.dependencies, 'file': file})
+    return {"dockerSuggestions": response.content}
+
 def prettierrcNode(state: mainState):
     file =  prettierrcFile
     file1 = prettierIgnoreFile
@@ -147,6 +163,18 @@ def prettierrcNode(state: mainState):
 def eslintNode(state: mainState):
     return
 
+def generateHTML(final_state):
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are expert in generating html from markdown files, and you don't miss any of the details"),
+        ("user", "Generate HTML for a project setup using this data: {final_state}"),
+        ("user", "Just return in html format only, don't return markdown")
+    ])
+
+    chain = prompt | llm
+
+    response = chain.invoke({"final_state": str(final_state)})
+
+    return response.content
 
 app = StateGraph(mainState)
 
@@ -155,13 +183,15 @@ app.add_node(packageNode, "packageNode")
 app.add_node(gitIgnoreNode, "gitIgnoreNode")
 app.add_node(envNode, "envNode")
 app.add_node(prettierrcNode, "prettierrcNode")
+app.add_node(dockerNode, "dockerNode")
 
 app.add_edge(START, "extractDepNode")
 app.add_edge("extractDepNode", "packageNode")
 app.add_edge("packageNode", "gitIgnoreNode")
 app.add_edge("gitIgnoreNode", "envNode")
 app.add_edge("envNode", "prettierrcNode")
-app.add_edge("prettierrcNode", END)
+app.add_edge("prettierrcNode", "dockerNode")
+app.add_edge("dockerNode", END)
 graph = app.compile()
 
 def run_langgraph():
@@ -172,10 +202,12 @@ def run_langgraph():
         envSuggestions="",
         prettierSuggestions="",
         vitestSuggestions="",
-        eslintSuggestions=""
+        eslintSuggestions="",
+        dockerSuggestions= ""
     )
     final_state = graph.invoke(initial_state)
-    return final_state
+    html_content = generateHTML(final_state)
+    return html_content
 ## Useful for debugging (streaming)
 # for event in graph.stream(initial_state, stream_mode="values"):
 #     print("Dependencies:", event["dependencies"])
